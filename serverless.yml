@@ -1,0 +1,64 @@
+service: lambdaTriggeredBySQSMessage
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: us-east-1
+  role: arn:aws:iam::233784350905:role/addPersonAdmin
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+        - s3:*
+      Resource: '*'
+
+custom:
+  xmlFileBucket: files-will-be-processed-to-sqs-here
+
+resources:
+  Resources:
+    queueForXMLfile:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: xml-file-added-to-queue
+
+functions:
+  uploadFile:
+    handler: src/functions/uploadFile.handler
+    events:
+      - http:
+          path: /file-upload
+          method: post
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+  S3ListenForCreate:
+    handler: src/functions/S3ListenForCreate.handler
+    events:
+      - s3:
+          bucket: ${self:custom.xmlFileBucket}
+          event: s3:ObjectCreated:*
+
+  SQSListenForMessage:
+    handler: src/functions/SQSListenForMessage.handler
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:233784350905:xml-file-added-to-queue
+
+# resources:
+#   Resources:
+#     queueForXMLfile:
+#       Type: AWS::SQS::Queue
+#       Properties:
+#         QueueName: xml-file-added-to-queue
+
+
+
