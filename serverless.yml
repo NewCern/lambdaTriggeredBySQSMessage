@@ -1,4 +1,4 @@
-service: lambdaTriggeredBySQSMessage
+service: TESTINGTESTING
 
 provider:
   name: aws
