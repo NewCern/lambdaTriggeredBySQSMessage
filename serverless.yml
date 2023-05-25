@@ -1,4 +1,4 @@
-service: TESTINGTESTING
+service: TESTING4
 
 provider:
   name: aws

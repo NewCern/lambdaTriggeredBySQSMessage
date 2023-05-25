@@ -158,15 +158,20 @@ import * as AWS from 'aws-sdk';
 import * as xml2js from 'xml2js';
 import { SQSEvent, SQSRecord } from 'aws-lambda';
 import { SQSHandler } from 'aws-lambda/trigger/sqs';
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
+
+
 
 // Configure AWS SDK
-AWS.config.update({
-  region: 'us-east-1',
-  accessKeyId: 'AKIATM3VCDC4T72JPFTL',
-  secretAccessKey: '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',
-});
+// AWS.config.update({
+//   region: 'us-east-1',
+//   accessKeyId: 'AKIATM3VCDC4T72JPFTL',
+//   secretAccessKey: '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',
+// });
 
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+// const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const dynamoClient = new DynamoDBClient({});
 
 interface Person {
   firstName: string;
@@ -175,7 +180,7 @@ interface Person {
 }
 
 // async function processSQSEvent(event: AWS.SQS.Types.ReceiveMessageResult): Promise<void> {
-export const handler = async (event: SQSEvent): Promise<any> => {
+export const handler:SQSHandler = async (event: SQSEvent): Promise<any> => {
     try {
     // const messages = event.Messages;
 
@@ -197,10 +202,12 @@ export const handler = async (event: SQSEvent): Promise<any> => {
       const messagePayloadToBuffer = Buffer.from(messagePayload);
       console.log("Message payload to buffer: ", messagePayloadToBuffer);
       const messageBufferToString = messagePayloadToBuffer.toString();
-      console.log("Buffer To String: ", messageBufferToString);
+      const bufferToStringNoWhitespace = messageBufferToString.replace(/\s/g, '');
+
+      console.log("Buffer To String: ", bufferToStringNoWhitespace);
 
 
-      const persons = await parseXML(messageBufferToString);
+      const persons = await parseXML(bufferToStringNoWhitespace);
       console.log("Below persons: ", persons)
 
       for (const person of persons) {
@@ -235,19 +242,25 @@ async function parseXML(xmlPayload: any): Promise<Person[]> {
   }
 }
 
-async function insertPersonToDynamoDB(person: Person): Promise<void> {
-  const params = {
-    TableName: 'PeopleTest',
-    Item: person,
-  };
+// async function insertPersonToDynamoDB(person: Person): Promise<void> {
+//   // const params = {
+//   //   TableName: 'PeopleTest',
+//   //   Item: person,
+//   // };
+//   const params: PutCommandInput = {
+//     TableName: 'PeopleTest',
+//     Item: person,
+//   };
+//   const command = new PutCommand(params);
 
-  try {
-    await dynamoDB.put(params).promise();
-    console.log(`Inserted record: ${JSON.stringify(person)}`);
-  } catch (error) {
-    console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
-  }
-}
+//   // try {
+//     // await dynamoDB.put(params).promise();
+//     await dynamoClient.send(command);
+//     console.log(`Inserted record: ${JSON.stringify(person)}`);
+//   // } catch (error) {
+//   //   console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
+//   // }
+// }
 
 // async function deleteSQSMessage(receiptHandle: string): Promise<void> {
 //   const params = {

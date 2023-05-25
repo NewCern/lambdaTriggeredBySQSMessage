@@ -40,139 +40,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-// export const handler: SQSHandler = async (event: SQSEvent): Promise<any> => {
-//   try {
-//     // Process each array item in the queue
-//     for (const record of event.Records) {
-//       // isolate message object
-//       const { body } = record;
-//       // convert to javascript object
-//       const message = JSON.parse(body);
-//       // extract key, which contains xml file
-//       const xml = message.key;
-//       // convert to buffer
-//       const xmlBuffer = Buffer.from(xml);
-//       // then to string
-//       const xmlBufferToString = xmlBuffer.toString();
-//       console.log("Buffer to String result: ", xmlBufferToString)
-//       const options = {
-//         explicitArray: false,
-//       };
-//       const jsonObjects = await parseXML(xmlBufferToString, options);
-//       console.log("Here is the parseXML being invoked: ", jsonObjects);
-//     }
-//   } catch (error) {
-//     console.error('Error processing SQS messages in the catch:', error);
-//     throw error;
-//   }
-// };
-// async function parseXML(xmlFile: string, options: any): Promise<any> {
-//   return new Promise((resolve, reject) => {
-//     parseString(xmlFile, options, (error, result) => {
-//       if (error) {
-//         console.log("There was an error: ", error);
-//         reject(error);
-//       } else {
-//         const json = JSON.stringify(result, null, 1);
-//         resolve(json);
-//         console.log("Here is the json: ", json);
-//       }
-//     })
-//   });
-// }
-// // async function deleteMessage(record: SQSRecord) {
-// //   const { receiptHandle } = record;
-// //   const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/xml-file-added-to-queue";
-// //   const sqs = new SQS();
-// //   const params = {
-// //     QueueUrl: queueUrl,
-// //     ReceiptHandle: receiptHandle,
-// //   };
-// //   try {
-// //     await sqs.deleteMessage(params).promise();
-// //     console.log('Deleted SQS message:', record.messageId);
-// //   } catch (error) {
-// //     console.error('Error deleting SQS message:', error);
-// //     throw error;
-// //   }
-// // }
-//////////////////////////////////////////////////////////////
-// import * as AWS from 'aws-sdk';
-// import * as xml2js from 'xml2js';
-// // Configure AWS SDK
-// AWS.config.update({
-//   region: 'YOUR_REGION',
-//   accessKeyId: 'YOUR_ACCESS_KEY',
-//   secretAccessKey: 'YOUR_SECRET_KEY',
-// });
-// const sqs = new AWS.SQS();
-// const dynamoDB = new AWS.DynamoDB.DocumentClient();
-// interface Person {
-//   firstName: string;
-//   lastName: string;
-//   address: string;
-// }
-// export const handler = async (queueUrl: string, tableName: string): Promise<void> => {
-//   try {
-//     const { Messages } = await sqs.receiveMessage({ QueueUrl: queueUrl, MaxNumberOfMessages: 10 }).promise();
-//     if (!Messages || Messages.length === 0) {
-//       console.log('No messages in the queue.');
-//       return;
-//     }
-//     for (const message of Messages) {
-//       const xmlPayload = message.Body;
-//       const persons = await parseXML(xmlPayload);
-//       for (const person of persons) {
-//         await insertPersonToDynamoDB(person, tableName);
-//       }
-//       // await sqs.deleteMessage({ QueueUrl: queueUrl, ReceiptHandle: message.ReceiptHandle }).promise();
-//       // console.log('Processed and deleted a message from the queue.');
-//     }
-//     console.log('All XML messages processed and inserted into DynamoDB successfully!');
-//   } catch (error) {
-//     console.error('Error processing XML messages:', error);
-//   }
-// }
-// async function parseXML(xmlPayload: any): Promise<Person[]> {
-//   try {
-//     const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
-//     const persons: Person[] = parsedData.records.record.map((record: any) => ({
-//       firstName: record.firstName,
-//       lastName: record.lastName,
-//       address: record.address,
-//     }));
-//     return persons;
-//   } catch (error) {
-//     console.error('Error parsing XML:', error);
-//     return [];
-//   }
-// }
-// async function insertPersonToDynamoDB(person: Person, tableName: string): Promise<void> {
-//   const params = {
-//     TableName: tableName,
-//     Item: person,
-//   };
-//   try {
-//     await dynamoDB.put(params).promise();
-//     console.log(`Inserted record: ${JSON.stringify(person)}`);
-//   } catch (error) {
-//     console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
-//   }
-// }
-// // Usage
-// const queueUrl = 'YourSQSQueueUrl';
-// const tableName = 'YourDynamoDBTableName';
-// handler(queueUrl, tableName).catch(console.error);
-////////////////////////////////////////////////////////////////////////////////////////////////
-const AWS = __importStar(require("aws-sdk"));
 const xml2js = __importStar(require("xml2js"));
+const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 // Configure AWS SDK
-AWS.config.update({
-    region: 'us-east-1',
-    accessKeyId: 'AKIATM3VCDC4T72JPFTL',
-    secretAccessKey: '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',
-});
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
+// AWS.config.update({
+//   region: 'us-east-1',
+//   accessKeyId: 'AKIATM3VCDC4T72JPFTL',
+//   secretAccessKey: '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',
+// });
+// const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
 // async function processSQSEvent(event: AWS.SQS.Types.ReceiveMessageResult): Promise<void> {
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -194,8 +72,9 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const messagePayloadToBuffer = Buffer.from(messagePayload);
             console.log("Message payload to buffer: ", messagePayloadToBuffer);
             const messageBufferToString = messagePayloadToBuffer.toString();
-            console.log("Buffer To String: ", messageBufferToString);
-            const persons = yield parseXML(messageBufferToString);
+            const bufferToStringNoWhitespace = messageBufferToString.replace(/\s/g, '');
+            console.log("Buffer To String: ", bufferToStringNoWhitespace);
+            const persons = yield parseXML(bufferToStringNoWhitespace);
             console.log("Below persons: ", persons);
             for (const person of persons) {
                 yield insertPersonToDynamoDB(person);
@@ -231,17 +110,22 @@ function parseXML(xmlPayload) {
 }
 function insertPersonToDynamoDB(person) {
     return __awaiter(this, void 0, void 0, function* () {
+        // const params = {
+        //   TableName: 'PeopleTest',
+        //   Item: person,
+        // };
         const params = {
             TableName: 'PeopleTest',
             Item: person,
         };
-        try {
-            yield dynamoDB.put(params).promise();
-            console.log(`Inserted record: ${JSON.stringify(person)}`);
-        }
-        catch (error) {
-            console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
-        }
+        const command = new lib_dynamodb_1.PutCommand(params);
+        // try {
+        // await dynamoDB.put(params).promise();
+        yield dynamoClient.send(command);
+        console.log(`Inserted record: ${JSON.stringify(person)}`);
+        // } catch (error) {
+        //   console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
+        // }
     });
 }
 // async function deleteSQSMessage(receiptHandle: string): Promise<void> {
