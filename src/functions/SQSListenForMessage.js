@@ -1,11 +1,4 @@
 "use strict";
-// import { SQSEvent, SQSRecord } from 'aws-lambda';
-// import { SQSHandler } from 'aws-lambda/trigger/sqs';
-// import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-// import { PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
-// import { parseString } from 'xml2js';
-// import { SQS } from 'aws-sdk';
-// import fs from 'fs';
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -42,13 +35,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const xml2js = __importStar(require("xml2js"));
 const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
-const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
-// Configure AWS SDK
-// AWS.config.update({
-//   region: 'us-east-1',
-//   accessKeyId: 'AKIATM3VCDC4T72JPFTL',
-//   secretAccessKey: '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',
-// });
 // const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
 // async function processSQSEvent(event: AWS.SQS.Types.ReceiveMessageResult): Promise<void> {
@@ -69,16 +55,19 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             // console.log("This is a string convered to json: ", messageToJson);
             const messagePayload = messageToJson.key;
             // console.log("This is the message payload: ", messagePayload);
-            const messagePayloadToBuffer = Buffer.from(messagePayload);
-            console.log("Message payload to buffer: ", messagePayloadToBuffer);
-            const messageBufferToString = messagePayloadToBuffer.toString();
-            const bufferToStringNoWhitespace = messageBufferToString.replace(/\s/g, '');
-            console.log("Buffer To String: ", bufferToStringNoWhitespace);
-            const persons = yield parseXML(bufferToStringNoWhitespace);
+            const bufferString = Buffer.from(messagePayload).toString('utf8');
+            // console.log("Here is the converted buffer: ", bufferString);
+            const removeBOM = bufferString.replace('\ufeff', '');
+            const removeWhiteSpace = removeBOM.replace(/\s/g, '');
+            console.log("white space removed: ", removeWhiteSpace);
+            const persons = yield parseXML(removeBOM);
             console.log("Below persons: ", persons);
-            for (const person of persons) {
-                yield insertPersonToDynamoDB(person);
+            for (let record of persons) {
+                console.log("each individual record: ", record);
             }
+            // for (const person of persons) {
+            //   await insertPersonToDynamoDB(person);
+            // }
             // Delete the processed message from the SQS queue
             // await deleteSQSMessage(message.ReceiptHandle);
             // console.log('Processed and deleted a message from the SQS queue.');
@@ -92,15 +81,44 @@ exports.handler = handler;
 function parseXML(xmlPayload) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const parsedData = yield xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
-            console.log("Below parsedData in parseXML: ", parsedData);
-            const persons = parsedData.records.record.map((record) => ({
-                firstName: record.firstName,
-                lastName: record.lastName,
-                address: record.address,
-            }));
-            console.log("Below persons in parseXML function: ", parsedData);
-            return persons;
+            const options = {
+                explicitCharkey: false,
+                trim: true,
+                normalize: false,
+                explicitRoot: true,
+                emptyTag: null,
+                explicitArray: true,
+                ignoreAttrs: false,
+                mergeAttrs: false,
+                validator: null // a callable validator
+            };
+            // const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
+            const parser = new xml2js.Parser(options);
+            // const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
+            const parsedData = yield parser.parseStringPromise(xmlPayload);
+            // const persons: Person[] = parsedData.records.record.map((record: any) => ({
+            // firstName: record.firstName,
+            // lastName: record.lastName,
+            // address: record.address,
+            // }));
+            // console.log("im in the function: ", persons)
+            // return persons;
+            // test
+            console.log(parsedData);
+            return parsedData;
+            // trying a different npm package
+            // const parsedData = xmljs.xml2json(xmlPayload, { trim:true, compact: true, spaces: 4 } );
+            // console.log("Here is parsedData: ", parsedData);
+            // // const convertToObject = JSON.parse(parsedData);
+            // // const persons: Person[] = convertToObject.records.record.map((record: any) => ({
+            // // firstName: record.firstName,
+            // // lastName: record.lastName,
+            // // address: record.address,
+            // // }));
+            // // console.log("from with function: ", persons)
+            // // return persons;
+            // // test
+            // return parsedData;
         }
         catch (error) {
             console.error('Error parsing XML:', error);
@@ -108,26 +126,43 @@ function parseXML(xmlPayload) {
         }
     });
 }
-function insertPersonToDynamoDB(person) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // const params = {
-        //   TableName: 'PeopleTest',
-        //   Item: person,
-        // };
-        const params = {
-            TableName: 'PeopleTest',
-            Item: person,
-        };
-        const command = new lib_dynamodb_1.PutCommand(params);
-        // try {
-        // await dynamoDB.put(params).promise();
-        yield dynamoClient.send(command);
-        console.log(`Inserted record: ${JSON.stringify(person)}`);
-        // } catch (error) {
-        //   console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
-        // }
-    });
-}
+// ANOTHER METHOD OF PARSING XML
+// async function parseXML(xmlPayload: any): Promise<Person[]> {
+//   try {
+//     const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
+//     console.log("Below parsedData in parseXML: ", parsedData);
+//     const persons: Person[] = parsedData.records.record.map((record: any) => ({
+//       firstName: record.firstName,
+//       lastName: record.lastName,
+//       address: record.address,
+//     }));
+//     console.log("Below persons in parseXML function: ", parsedData);
+//     return persons;
+//   } catch (error) {
+//     console.error('Error parsing XML:', error);
+//     return [];
+//   }
+// }
+// INSERT PERSON
+// async function insertPersonToDynamoDB(person: Person): Promise<void> {
+//   // const params = {
+//   //   TableName: 'PeopleTest',
+//   //   Item: person,
+//   // };
+//   const params: PutCommandInput = {
+//     TableName: 'PeopleTest',
+//     Item: person,
+//   };
+//   const command = new PutCommand(params);
+//   // try {
+//     // await dynamoDB.put(params).promise();
+//     await dynamoClient.send(command);
+//     console.log(`Inserted record: ${JSON.stringify(person)}`);
+//   // } catch (error) {
+//   //   console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
+//   // }
+// }
+// DELETE
 // async function deleteSQSMessage(receiptHandle: string): Promise<void> {
 //   const params = {
 //     QueueUrl: 'YourSQSQueueUrl',
