@@ -35,42 +35,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const xml2js = __importStar(require("xml2js"));
 const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
-// const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
+const uuid_1 = require("uuid");
 const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
-// async function processSQSEvent(event: AWS.SQS.Types.ReceiveMessageResult): Promise<void> {
+const TABLE_NAME = "PeopleTest";
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // const messages = event.Messages;
-        // if (!messages || messages.length === 0) {
         if (!event.Records || event.Records.length === 0) {
             console.log('No messages in the event.');
             return;
         }
-        // for (const message of messages) {
         for (const message of event.Records) {
-            // const xmlPayload = message.Body;
             const { body } = message;
-            // console.log("below Message Body: ", body);
             const messageToJson = JSON.parse(body);
-            // console.log("This is a string convered to json: ", messageToJson);
-            const messagePayload = messageToJson.key;
-            // console.log("This is the message payload: ", messagePayload);
+            // access data key in s3 bucket to get xml file
+            const messagePayload = messageToJson.data;
             const bufferString = Buffer.from(messagePayload).toString('utf8');
-            // console.log("Here is the converted buffer: ", bufferString);
-            const removeBOM = bufferString.replace('\ufeff', '');
-            const removeWhiteSpace = removeBOM.replace(/\s/g, '');
-            console.log("white space removed: ", removeWhiteSpace);
-            const persons = yield parseXML(removeBOM);
-            console.log("Below persons: ", persons);
-            for (let record of persons) {
-                console.log("each individual record: ", record);
+            // get xml file and parse to javascript
+            const persons = yield parseXML(bufferString);
+            // iterate through persons and add each object to DynamoDB
+            for (let person of persons) {
+                // add an id number
+                // and spread person object
+                const data = Object.assign(Object.assign({}, person), { personId: (0, uuid_1.v4)() });
+                // post to the database
+                yield insertToDynamo(data, TABLE_NAME);
+                console.log("Here is each person: ", person);
             }
-            // for (const person of persons) {
-            //   await insertPersonToDynamoDB(person);
-            // }
-            // Delete the processed message from the SQS queue
-            // await deleteSQSMessage(message.ReceiptHandle);
-            // console.log('Processed and deleted a message from the SQS queue.');
         }
     }
     catch (error) {
@@ -81,87 +72,45 @@ exports.handler = handler;
 function parseXML(xmlPayload) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            // configure options for json output
             const options = {
                 explicitCharkey: false,
                 trim: true,
                 normalize: false,
                 explicitRoot: true,
                 emptyTag: null,
-                explicitArray: true,
+                explicitArray: false,
                 ignoreAttrs: false,
                 mergeAttrs: false,
                 validator: null // a callable validator
             };
-            // const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
             const parser = new xml2js.Parser(options);
-            // const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
             const parsedData = yield parser.parseStringPromise(xmlPayload);
-            // const persons: Person[] = parsedData.records.record.map((record: any) => ({
-            // firstName: record.firstName,
-            // lastName: record.lastName,
-            // address: record.address,
-            // }));
-            // console.log("im in the function: ", persons)
-            // return persons;
-            // test
-            console.log(parsedData);
-            return parsedData;
-            // trying a different npm package
-            // const parsedData = xmljs.xml2json(xmlPayload, { trim:true, compact: true, spaces: 4 } );
-            // console.log("Here is parsedData: ", parsedData);
-            // // const convertToObject = JSON.parse(parsedData);
-            // // const persons: Person[] = convertToObject.records.record.map((record: any) => ({
-            // // firstName: record.firstName,
-            // // lastName: record.lastName,
-            // // address: record.address,
-            // // }));
-            // // console.log("from with function: ", persons)
-            // // return persons;
-            // // test
-            // return parsedData;
+            const persons = parsedData.records.record.map((record) => ({
+                firstName: record.firstName,
+                lastName: record.lastName,
+                address: record.address,
+            }));
+            return persons;
         }
         catch (error) {
             console.error('Error parsing XML:', error);
-            return [];
+            return;
         }
     });
 }
-// ANOTHER METHOD OF PARSING XML
-// async function parseXML(xmlPayload: any): Promise<Person[]> {
-//   try {
-//     const parsedData = await xml2js.parseStringPromise(xmlPayload, { explicitArray: false });
-//     console.log("Below parsedData in parseXML: ", parsedData);
-//     const persons: Person[] = parsedData.records.record.map((record: any) => ({
-//       firstName: record.firstName,
-//       lastName: record.lastName,
-//       address: record.address,
-//     }));
-//     console.log("Below persons in parseXML function: ", parsedData);
-//     return persons;
-//   } catch (error) {
-//     console.error('Error parsing XML:', error);
-//     return [];
-//   }
-// }
 // INSERT PERSON
-// async function insertPersonToDynamoDB(person: Person): Promise<void> {
-//   // const params = {
-//   //   TableName: 'PeopleTest',
-//   //   Item: person,
-//   // };
-//   const params: PutCommandInput = {
-//     TableName: 'PeopleTest',
-//     Item: person,
-//   };
-//   const command = new PutCommand(params);
-//   // try {
-//     // await dynamoDB.put(params).promise();
-//     await dynamoClient.send(command);
-//     console.log(`Inserted record: ${JSON.stringify(person)}`);
-//   // } catch (error) {
-//   //   console.error(`Error inserting record: ${JSON.stringify(person)}`, error);
-//   // }
-// }
+function insertToDynamo(person, tableName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const params = {
+            TableName: tableName,
+            Item: person,
+        };
+        const command = new lib_dynamodb_1.PutCommand(params);
+        yield dynamoClient.send(command);
+        return person;
+    });
+}
 // DELETE
 // async function deleteSQSMessage(receiptHandle: string): Promise<void> {
 //   const params = {

@@ -11,10 +11,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const client_sqs_1 = require("@aws-sdk/client-sqs");
-// need to utilize environment variables here
+const client_s3_1 = require("@aws-sdk/client-s3");
 const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
 const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/xml-file-added-to-queue";
+const s3 = new client_s3_1.S3Client({});
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         // Process the S3 create event
         const records = event.Records;
@@ -22,21 +24,34 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             if (record.eventName === 'ObjectCreated:Put') {
                 const bucketName = record.s3.bucket.name;
                 const objectKey = record.s3.object.key;
-                // Perform actions on the newly created object
-                // Send a message to the SQS queue
+                // BELOW IS TEST OF HOW TO ACCESS BUCKET CONTENTS
+                // Create query parameters to search S3 bucket
+                const getObjectParams = new client_s3_1.GetObjectCommand({
+                    Bucket: bucketName,
+                    Key: objectKey,
+                });
+                // send get command to S3 bucket
+                const getData = yield s3.send(getObjectParams);
+                // once data is recieved, convert to a string
+                const fileData = yield ((_a = getData.Body) === null || _a === void 0 ? void 0 : _a.transformToString());
+                console.log("Here is the File data: ", fileData);
+                // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                // configure SQS message equiped with xml data
                 const message = {
                     event: 'objectCreated:Put',
                     bucket: bucketName,
-                    key: objectKey
+                    key: objectKey,
+                    data: fileData,
                 };
+                // configure parameters to send to SQS
                 const command = new client_sqs_1.SendMessageCommand({
                     QueueUrl: queueUrl,
-                    MessageBody: JSON.stringify(message)
+                    MessageBody: JSON.stringify(message),
                 });
+                // send to SQS
                 yield sqs.send(command);
             }
         }
-        // Return a successful response
         return {
             statusCode: 200,
             body: JSON.stringify({ message: 'S3 create event processed' }),

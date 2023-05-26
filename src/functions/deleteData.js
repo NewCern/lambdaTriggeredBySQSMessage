@@ -1,0 +1,66 @@
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.handler = void 0;
+const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
+const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
+// const dynamoDocClient = DynamoDBDocumentClient.from(dynamoClient);
+// Create an object to export with key value pairs
+// some of these key value pairs will be functions
+const dynamo = {
+    delete: (tableName, id) => __awaiter(void 0, void 0, void 0, function* () {
+        const params = {
+            TableName: tableName,
+            Key: {
+                personId: id,
+            }
+        };
+        // pass delete command to the database
+        const command = new lib_dynamodb_1.DeleteCommand(params);
+        // send delete command
+        const data = yield dynamoClient.send(command);
+        return data;
+    })
+};
+const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const personId = event.pathParameters.id;
+        console.log("Path PathParameters", personId);
+        console.log("Here is the event on delete: event ", event.pathParameters.id);
+        // call delete function 
+        yield dynamo.delete("PeopleTest", personId);
+        const response = {
+            statusCode: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                'Access-Control-Allow-Methods': 'OPTIONS,DELETE'
+            },
+            body: JSON.stringify({ message: 'Data has been deleted' })
+        };
+        return response;
+    }
+    catch (error) {
+        console.error('Unable to add item. Error JSON:', JSON.stringify(error, null, 2));
+        const response = {
+            statusCode: 500,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                'Access-Control-Allow-Methods': 'OPTIONS,DELETE'
+            },
+            body: JSON.stringify({ message: 'Unable to delete item' })
+        };
+        return response;
+    }
+});
+exports.handler = handler;

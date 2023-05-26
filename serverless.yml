@@ -40,6 +40,57 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: false
 
+  getData:
+    handler: src/functions/getData.handler
+    events:
+      - http:
+          path: /get-data
+          method: get
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+  createData:
+    handler: src/functions/createData.handler
+    events:
+      - http:
+          path: /create-data
+          method: post
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+  deleteData:
+    handler: src/functions/deleteData.handler
+    events:
+      - http:
+          path: /delete-data
+          method: delete
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
   S3ListenForCreate:
     handler: src/functions/S3ListenForCreate.handler
     events:
@@ -53,12 +104,6 @@ functions:
       - sqs:
           arn: arn:aws:sqs:us-east-1:233784350905:xml-file-added-to-queue
 
-# resources:
-#   Resources:
-#     queueForXMLfile:
-#       Type: AWS::SQS::Queue
-#       Properties:
-#         QueueName: xml-file-added-to-queue
 
 
 
