@@ -10,31 +10,26 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-const uuid_1 = require("uuid");
-const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
-const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
-const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
-// Create an object to export with key value pairs
-// some of these key value pairs will be functions
-const dynamo = {
-    write: (data, tableName) => __awaiter(void 0, void 0, void 0, function* () {
-        const params = {
-            TableName: tableName,
-            Item: data,
-        };
-        // pass to database input
-        const command = new lib_dynamodb_1.PutCommand(params);
-        // send input command
-        yield dynamoClient.send(command);
-        return data;
-    })
-};
+const client_sqs_1 = require("@aws-sdk/client-sqs");
+const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/updated-data-object-queue";
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = JSON.parse(event.body);
-        const data = Object.assign(Object.assign({}, body), { personId: (0, uuid_1.v4)() });
-        // call write function from Library
-        yield dynamo.write(data, "PeopleTest");
+        console.log("Here is the body: ", body);
+        // configure SQS message equiped with xml data
+        const message = {
+            event: 'Send update Message To Queue',
+            key: body.personId,
+            data: body,
+        };
+        // configure parameters to send to SQS
+        const command = new client_sqs_1.SendMessageCommand({
+            QueueUrl: queueUrl,
+            MessageBody: JSON.stringify(message),
+        });
+        // send to SQS
+        yield sqs.send(command);
         const response = {
             statusCode: 200,
             headers: {
@@ -47,17 +42,11 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         return response;
     }
     catch (error) {
-        console.error('Unable to add item. Error JSON:', JSON.stringify(error, null, 2));
-        const response = {
+        console.error(error);
+        return {
             statusCode: 500,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST'
-            },
-            body: JSON.stringify({ message: 'Unable to add item' })
+            body: JSON.stringify({ message: 'An error occurred' }),
         };
-        return response;
     }
 });
 exports.handler = handler;

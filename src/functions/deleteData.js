@@ -34,8 +34,6 @@ const dynamo = {
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const personId = event.pathParameters.id;
-        console.log("Path PathParameters", personId);
-        console.log("Here is the event on delete: event ", event.pathParameters.id);
         // call delete function 
         yield dynamo.delete("PeopleTest", personId);
         const response = {
@@ -43,9 +41,10 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,DELETE'
+                'Access-Control-Allow-Methods': '*',
+                "Access-Control-Allow-Credentials": false
             },
-            body: JSON.stringify({ message: 'Data has been deleted' })
+            body: JSON.stringify(event.body)
         };
         return response;
     }

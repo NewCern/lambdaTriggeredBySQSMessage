@@ -1,8 +1,5 @@
 import { APIGatewayProxyResult } from "aws-lambda";
-// import { dynamo } from "./lib/dynamo";
 import { v4 as uuid } from "uuid";
-// import { formatJSONResponse } from "./lib/apiGateway";
-
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
 

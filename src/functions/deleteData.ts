@@ -26,8 +26,6 @@ const dynamo = {
 export const handler = async (event: any): Promise<any> => {
     try {
         const personId = event.pathParameters.id;
-        console.log("Path PathParameters", personId)
-        console.log("Here is the event on delete: event ", event.pathParameters.id)
         // call delete function 
         await dynamo.delete("PeopleTest", personId);
         const response: APIGatewayProxyResult = {
@@ -35,9 +33,10 @@ export const handler = async (event: any): Promise<any> => {
             headers: {
               'Access-Control-Allow-Origin': '*',
               'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-              'Access-Control-Allow-Methods': 'OPTIONS,DELETE'
+              'Access-Control-Allow-Methods': '*',
+              "Access-Control-Allow-Credentials": false
             },
-            body: JSON.stringify({ message: 'Data has been deleted' })
+            body: JSON.stringify(event.body)
           };
           return response;
     } catch(error){

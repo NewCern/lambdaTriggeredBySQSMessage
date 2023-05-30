@@ -10,52 +10,62 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-const uuid_1 = require("uuid");
 const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
-// Create an object to export with key value pairs
-// some of these key value pairs will be functions
+// const dynamoDocClient = DynamoDBDocumentClient.from(dynamoClient);
+// Create an object to export with key-value pairs
+// some of these key-value pairs will be functions
 const dynamo = {
-    write: (data, tableName) => __awaiter(void 0, void 0, void 0, function* () {
+    update: (tableName, id, newData) => __awaiter(void 0, void 0, void 0, function* () {
         const params = {
             TableName: tableName,
-            Item: data,
+            Key: {
+                personId: id,
+            },
+            UpdateExpression: 'SET #data = :newData',
+            ExpressionAttributeNames: {
+                '#data': 'data',
+            },
+            ExpressionAttributeValues: {
+                ':newData': newData,
+            },
         };
-        // pass to database input
-        const command = new lib_dynamodb_1.PutCommand(params);
-        // send input command
-        yield dynamoClient.send(command);
+        // pass update command to the database
+        const command = new lib_dynamodb_1.UpdateCommand(params);
+        // send update command
+        const data = yield dynamoClient.send(command);
         return data;
-    })
+    }),
 };
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const body = JSON.parse(event.body);
-        const data = Object.assign(Object.assign({}, body), { personId: (0, uuid_1.v4)() });
-        // call write function from Library
-        yield dynamo.write(data, "PeopleTest");
+        const personId = event.pathParameters.id;
+        const newData = JSON.parse(event.body); // Assuming the new data is passed in the request body
+        // call update function
+        yield dynamo.update("PeopleTest", personId, newData);
         const response = {
             statusCode: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST'
+                'Access-Control-Allow-Methods': '*',
+                "Access-Control-Allow-Credentials": false
             },
-            body: JSON.stringify({ message: 'Data has been created' })
+            body: JSON.stringify(event.body)
         };
         return response;
     }
     catch (error) {
-        console.error('Unable to add item. Error JSON:', JSON.stringify(error, null, 2));
+        console.error('Unable to update item. Error JSON:', JSON.stringify(error, null, 2));
         const response = {
             statusCode: 500,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST'
+                'Access-Control-Allow-Methods': 'OPTIONS,PUT' // Updated methods to include PUT
             },
-            body: JSON.stringify({ message: 'Unable to add item' })
+            body: JSON.stringify({ message: 'Unable to update item' })
         };
         return response;
     }
