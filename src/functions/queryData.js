@@ -12,13 +12,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const aws_sdk_1 = require("aws-sdk");
 const dynamoDB = new aws_sdk_1.DynamoDB.DocumentClient();
-const TABLE_NAME = "PeopleTest";
-const handler = () => __awaiter(void 0, void 0, void 0, function* () {
-    const params = {
-        TableName: TABLE_NAME,
-    };
+const TABLE_NAME = 'PeopleTest';
+const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // GET request
+        const { keyword } = JSON.parse(event.body || '{}');
+        const params = {
+            TableName: TABLE_NAME,
+            FilterExpression: 'contains(firstName, :keyword) OR contains(lastName, :keyword) OR contains(address, :keyword)',
+            ExpressionAttributeValues: {
+                ':keyword': keyword
+            }
+        };
         const data = yield dynamoDB.scan(params).promise();
         const users = data.Items;
         const response = {
@@ -26,9 +30,9 @@ const handler = () => __awaiter(void 0, void 0, void 0, function* () {
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET'
+                'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
-            body: JSON.stringify(users),
+            body: JSON.stringify(users)
         };
         return response;
     }

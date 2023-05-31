@@ -29,6 +29,14 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: delete-data-object-queue
+    queueForQueryFile:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: query-data-object-queue
+    queueForResults:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: search-results-objects-queue
 
 functions:
   uploadFile:
@@ -149,6 +157,23 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: false
 
+  SQSsendQueryMessage:
+    handler: src/functions/SQSsendQueryMessage.handler
+    events:
+      - http:
+          path: /query-data
+          method: POST
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
   S3ListenForCreate:
     handler: src/functions/S3ListenForCreate.handler
     events:
@@ -161,6 +186,31 @@ functions:
     events:
       - sqs:
           arn: arn:aws:sqs:us-east-1:233784350905:xml-file-added-to-queue
+
+  SQSListenForQueryMessage:
+    handler: src/functions/SQSListenForQueryMessage.handler
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:233784350905:query-data-object-queue
+
+  SQSListenForSearchResultsMessage:
+    handler: src/functions/SQSListenForSearchResultsMessage.handler
+    events:
+      - http:
+          path: /search-result-data
+          method: GET
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      # - sqs:
+      #     arn: arn:aws:sqs:us-east-1:233784350905:search-results-objects-queue
 
   SQSListenForUpdateMessage:
     handler: src/functions/SQSListenForUpdateMessage.handler

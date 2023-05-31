@@ -10,32 +10,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
-const aws_sdk_1 = require("aws-sdk");
-const dynamoDB = new aws_sdk_1.DynamoDB.DocumentClient();
-const TABLE_NAME = "PeopleTest";
-const handler = () => __awaiter(void 0, void 0, void 0, function* () {
-    const params = {
-        TableName: TABLE_NAME,
-    };
+const client_sqs_1 = require("@aws-sdk/client-sqs");
+const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/query-data-object-queue";
+const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // GET request
-        const data = yield dynamoDB.scan(params).promise();
-        const users = data.Items;
+        const body = JSON.parse(event.body);
+        console.log("Here is the body: ", body);
+        const message = {
+            event: 'Send query Message To Queue',
+            key: body.search,
+            data: body,
+        };
+        // configure parameters to send to SQS
+        const command = new client_sqs_1.SendMessageCommand({
+            QueueUrl: queueUrl,
+            MessageBody: JSON.stringify(message),
+        });
+        // send to SQS
+        yield sqs.send(command);
         const response = {
             statusCode: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET'
+                'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
-            body: JSON.stringify(users),
+            body: JSON.stringify({ message: 'Query message has been sent' })
         };
         return response;
     }
     catch (error) {
+        console.error(error);
         return {
             statusCode: 500,
-            body: JSON.stringify(`Error getting users from DynamoDB: ${error}`)
+            body: JSON.stringify({ message: 'An error occurred' }),
         };
     }
 });
