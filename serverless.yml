@@ -46,7 +46,7 @@ functions:
           path: /file-upload
           method: post
           cors:
-            origin: '*' 
+            origin: "'*'" 
             headers: 
               - Content-Type
               - X-Amz-Date
@@ -193,14 +193,14 @@ functions:
       - sqs:
           arn: arn:aws:sqs:us-east-1:233784350905:query-data-object-queue
 
-  SQSListenForSearchResultsMessage:
-    handler: src/functions/SQSListenForSearchResultsMessage.handler
+  getSearchResultsMessage:
+    handler: src/functions/getSearchResultsMessage.handler
     events:
       - http:
           path: /search-result-data
           method: GET
           cors:
-            origin: '*' 
+            origin: "'*'" 
             headers: 
               - Content-Type
               - X-Amz-Date
@@ -209,8 +209,8 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
-      # - sqs:
-      #     arn: arn:aws:sqs:us-east-1:233784350905:search-results-objects-queue
+      - sqs:
+          arn: arn:aws:sqs:us-east-1:233784350905:search-results-objects-queue
 
   SQSListenForUpdateMessage:
     handler: src/functions/SQSListenForUpdateMessage.handler
@@ -232,6 +232,331 @@ functions:
 
 
 
+# AWSTemplateFormatVersion: '2010-09-09'
+# Transform: AWS::Serverless-2016-10-31
+
+# Globals:
+#   Api:
+#     Cors:
+#       AllowMethods: "'*'"
+#       AllowHeaders: "'*'"
+#       AllowOrigin: "'*'"
+#   Function:
+#     Runtime: nodejs16.x
+#     Timeout: 10
+
+# Resources:
+#   FunctionRole:
+#     Type: 'AWS::IAM::Role'
+#     Properties:
+#       RoleName: AddPersonAdminRole
+#       AssumeRolePolicyDocument:
+#         Version: '2012-10-17'
+#         Statement:
+#           - Effect: Allow
+#             Principal:
+#               Service: lambda.amazonaws.com
+#             Action: 'sts:AssumeRole'
+#       Policies:
+#         - PolicyName: AmazonDynamoDBFullAccess
+#           PolicyDocument:
+#             Version: '2012-10-17'
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - 'dynamodb:*'
+#                 Resource: '*'
+#         - PolicyName: AmazonS3FullAccess
+#           PolicyDocument:
+#             Version: '2012-10-17'
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - 's3:*'
+#                 Resource: '*'
+#         - PolicyName: AmazonSQSFullAccess
+#           PolicyDocument:
+#             Version: '2012-10-17'
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - 's3:*'
+#                 Resource: '*'
+#   UploadFileFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: uploadFile.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /file-upload
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   GetDataFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: getData.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /get-data
+#             Method: get
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'GET'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   CreateDataFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: createData.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /create-data
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   DeleteDataFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: deleteData.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /delete-data
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   UpdateDataFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: updateData.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /update-data
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   SQSSendUpdateMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSsendUpdateMessage.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /send-update-message
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   SQSSendDeleteMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSsendDeleteMessage.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /send-delete-message
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   SQSSendQueryMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSsendQueryMessage.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /query-data
+#             Method: post
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'POST'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+
+#   S3ListenForCreateFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: S3ListenForCreate.handler
+#       Events:
+#         S3Event:
+#           Type: S3
+#           Properties:
+#             Bucket:
+#               Ref: XmlFileBucket
+
+#   SQSListenForCreateMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSListenForCreateMessage.handler
+#       Events:
+#         SQSEvent:
+#           Type: SQS
+#           Properties:
+#             Queue:
+#               Fn::GetAtt: [QueueForXMLfile, Arn]
+
+#   SQSListenForQueryMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSListenForQueryMessage.handler
+#       Events:
+#         SQSEvent:
+#           Type: SQS
+#           Properties:
+#             Queue:
+#               Fn::GetAtt: [QueueForQueryFile, Arn]
+
+#   GetSearchResultsMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: getSearchResultsMessage.handler
+#       Events:
+#         ApiEvent:
+#           Type: Api
+#           Properties:
+#             Path: /search-result-data
+#             Method: get
+#             RestApiId:
+#               Ref: ApiGatewayApi
+#             # Cors:
+#             #   AllowMethods: "'GET'"
+#             #   AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+#             #   AllowOrigin: "'*'"
+#             #   AllowCredentials: false
+#         SQSEvent:
+#           Type: SQS
+#           Properties:
+#             Queue:
+#               Fn::GetAtt: [QueueForResults, Arn]
+
+#   SQSListenForUpdateMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSListenForUpdateMessage.handler
+#       Events:
+#         SQSEvent:
+#           Type: SQS
+#           Properties:
+#             Queue:
+#               Fn::GetAtt: [QueueForUpdateFile, Arn]
+
+#   SQSListenForDeleteMessageFunction:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: src/functions/
+#       Handler: SQSListenForDeleteMessage.handler
+#       Events:
+#         SQSEvent:
+#           Type: SQS
+#           Properties:
+#             Queue:
+#               Fn::GetAtt: [QueueForDeleteFile, Arn]
+
+#   QueueForXMLfile:
+#     Type: AWS::SQS::Queue
+#     Properties:
+#       QueueName: xml-file-added-to-queue
+
+#   QueueForUpdateFile:
+#     Type: AWS::SQS::Queue
+#     Properties:
+#       QueueName: updated-data-object-queue
+
+#   QueueForDeleteFile:
+#     Type: AWS::SQS::Queue
+#     Properties:
+#       QueueName: delete-data-object-queue
+
+#   QueueForQueryFile:
+#     Type: AWS::SQS::Queue
+#     Properties:
+#       QueueName: query-data-object-queue
+
+#   QueueForResults:
+#     Type: AWS::SQS::Queue
+#     Properties:
+#       QueueName: search-results-objects-queue
+
+#   XmlFileBucket:
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       BucketName: files-will-be-processed-to-sqs-here
+
+# Outputs:
+#   ApiEndpoint:
+#     Description: API endpoint URL
+#     Value:
+#       Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
+#   XmlFileBucketName:
+#     Description: S3 bucket name for XML files
+#     Value:
+#       Ref: XmlFileBucket
 
 
 

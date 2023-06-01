@@ -17,7 +17,7 @@ exports.handler = void 0;
 const client_sqs_1 = require("@aws-sdk/client-sqs");
 const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
 const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/search-results-objects-queue";
-const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
+const handler = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // // Check if the request method is GET
         // if (event.httpMethod !== 'GET') {
@@ -27,25 +27,26 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         //   };
         // }
         // Perform SQS consumer logic
-        // const receiveMessageCommand = new ReceiveMessageCommand({
-        //   QueueUrl: queueUrl,
-        //   MaxNumberOfMessages: 1,
-        // });
-        // const { Messages } = await sqs.send(receiveMessageCommand);
+        const receiveMessageCommand = new client_sqs_1.ReceiveMessageCommand({
+            QueueUrl: queueUrl,
+            MaxNumberOfMessages: 1,
+        });
+        const { Messages } = yield sqs.send(receiveMessageCommand);
         // console.log("These Are the Messages: ", Messages)
-        // if (!Messages || Messages.length === 0) {
-        //   return {
-        //     statusCode: 204,
-        //     body: JSON.stringify('No messages in the queue'),
-        //   };
-        // }
-        // const message = Messages[0];
+        if (!Messages || Messages.length === 0) {
+            return {
+                statusCode: 204,
+                body: JSON.stringify('No messages in the queue'),
+            };
+        }
+        const message = Messages[0];
+        // console.log("This is Message[0]: ", message)
         // const { Body: messageBody, ReceiptHandle } = message;
-        // // Process the message payload
+        // // // Process the message payload
         // const messageToJson = JSON.parse(messageBody || '{}');
         // const messagePayload = messageToJson.data;
         // const searchResults = messagePayload.Items || '{}';
-        // // Delete the processed message from the queue
+        // // // Delete the processed message from the queue
         // const deleteMessageCommand = new DeleteMessageCommand({
         //   QueueUrl: queueUrl,
         //   ReceiptHandle,
@@ -53,14 +54,15 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         // await sqs.send(deleteMessageCommand);
         // Return the search results as an HTTP response
         const response = {
-            statusCode: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,GET'
+            'statusCode': 200,
+            'headers': {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Methods": "*",
+                "Accept": '*/*',
+                "Content-Type": 'application/json'
             },
-            //   body: JSON.stringify(searchResults),
-            body: JSON.stringify({ message: "Helloo" }),
+            body: JSON.stringify("bodyParsed"),
         };
         return response;
     }
