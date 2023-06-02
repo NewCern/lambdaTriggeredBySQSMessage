@@ -11,9 +11,11 @@ interface User {
   address: string;
 }
 
-export const handler = async (event: any): Promise<any> => {
+export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayProxyResult> => {
   try {
-    const { keyword } = JSON.parse(event.body || '{}');
+    const eventBody = JSON.stringify(event);
+    const body = JSON.parse(eventBody);
+    const keyword = body.search;
 
     const params = {
       TableName: TABLE_NAME,
@@ -23,15 +25,13 @@ export const handler = async (event: any): Promise<any> => {
       }
     };
 
-    const data = await dynamoDB.scan(params).promise();
-    const users = data.Items as User[];
+      const data = await dynamoDB.scan(params).promise();
+      const users = data.Items as User[];
 
     const response: APIGatewayProxyResult = {
       statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST'
       },
       body: JSON.stringify(users)
     };
@@ -39,7 +39,7 @@ export const handler = async (event: any): Promise<any> => {
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify(`Error getting users from DynamoDB: ${error}`)
+      body: JSON.stringify(`Error getting users from DynamoDB: ${error}`),
     };
   }
 };

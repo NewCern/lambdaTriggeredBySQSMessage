@@ -184,6 +184,23 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: false
 
+  queryData:
+    handler: src/functions/queryData.handler
+    events:
+      - http:
+          path: /query-result-directly-from-dynamo
+          method: POST
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
   S3ListenForCreate:
     handler: src/functions/S3ListenForCreate.handler
     events:
@@ -209,18 +226,18 @@ functions:
       - http:
           path: /search-result-data
           method: GET
-          cors: true
-          #   origin: '*' 
-          #   headers: 
-          #     - Content-Type
-          #     - X-Amz-Date
-          #     - Authorization
-          #     - X-Api-Key
-          #     - X-Amz-Security-Token
-          #     - X-Amz-User-Agent
-          #   allowCredentials: false
-      - sqs:
-          arn: arn:aws:sqs:us-east-1:233784350905:search-results-objects-queue
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+      # - sqs:
+      #     arn: arn:aws:sqs:us-east-1:233784350905:search-results-objects-queue
 
   SQSListenForUpdateMessage:
     handler: src/functions/SQSListenForUpdateMessage.handler
@@ -234,11 +251,6 @@ functions:
       - sqs:
           arn: arn:aws:sqs:us-east-1:233784350905:delete-data-object-queue
 
-  # OpenSearchIndexCreate:
-  #   handler: src/functions/OpenSearchIndexCreate.handler
-
-  # OpenSearchIndexSearch:
-  #   handler: src/functions/OpenSearchIndexSearch.handler
 
 
 

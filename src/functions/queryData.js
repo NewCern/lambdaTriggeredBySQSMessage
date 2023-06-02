@@ -15,7 +15,9 @@ const dynamoDB = new aws_sdk_1.DynamoDB.DocumentClient();
 const TABLE_NAME = 'PeopleTest';
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { keyword } = JSON.parse(event.body || '{}');
+        const eventBody = JSON.stringify(event);
+        const body = JSON.parse(eventBody);
+        const keyword = body.search;
         const params = {
             TableName: TABLE_NAME,
             FilterExpression: 'contains(firstName, :keyword) OR contains(lastName, :keyword) OR contains(address, :keyword)',
@@ -29,8 +31,6 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             statusCode: 200,
             headers: {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
             body: JSON.stringify(users)
         };
@@ -39,7 +39,7 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify(`Error getting users from DynamoDB: ${error}`)
+            body: JSON.stringify(`Error getting users from DynamoDB: ${error}`),
         };
     }
 });

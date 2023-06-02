@@ -1,8 +1,4 @@
 "use strict";
-// import { DynamoDB } from 'aws-sdk';
-// import { SQSEvent } from 'aws-lambda';
-// import { SQSHandler } from 'aws-lambda/trigger/sqs';
-// import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -43,9 +39,9 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         console.log("This is Message[0]: ", message);
         const { Body: messageBody, ReceiptHandle } = message;
         // // // Process the message payload
-        // const messageToJson = JSON.parse(messageBody || '{}');
-        // const messagePayload = messageToJson.data;
-        // const searchResults = messagePayload.Items || '{}';
+        const messageToJson = JSON.parse(messageBody || '{}');
+        const messagePayload = messageToJson.data;
+        const searchResults = messagePayload.Items || '{}';
         // // // Delete the processed message from the queue
         // const deleteMessageCommand = new DeleteMessageCommand({
         //   QueueUrl: queueUrl,
@@ -54,13 +50,13 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         // await sqs.send(deleteMessageCommand);
         // Return the search results as an HTTP response
         const response = {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Methods': '*',
+            statusCode: 200,
+            headers: {
+                // 'Content-Type': 'application/json',
+                // 'Access-Control-Allow-Methods': '*',
                 'Access-Control-Allow-Origin': '*',
             },
-            body: JSON.stringify("bodyParsed"),
+            body: searchResults,
         };
         return response;
     }

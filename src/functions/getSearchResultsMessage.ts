@@ -1,46 +1,3 @@
-// import { DynamoDB } from 'aws-sdk';
-// import { SQSEvent } from 'aws-lambda';
-// import { SQSHandler } from 'aws-lambda/trigger/sqs';
-// import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-
-// // this is the queue that the results message will be sent to.
-// // const sqs = new SQSClient({ region: "us-east-1" });
-// // const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/search-results-objects-queue";
-
-// // const dynamoDB = new DynamoDB.DocumentClient();
-// // const TABLE_NAME = "PeopleTest";
-
-// export const handler:SQSHandler = async (event: SQSEvent): Promise<any> => {
-//     try {
-//       if (!event.Records || event.Records.length === 0) {
-//         console.log('No messages in the event.');
-//         return;
-//       }
-
-//       for (const message of event.Records) {
-//         const { body } = message;
-//         const messageToJson = JSON.parse(body);
-//         // access data key for payload
-//         const messagePayload = messageToJson.data;
-
-//         // get keyword from message
-//         const searchResults = messagePayload.Items || '{}';
-//         const response = {
-//             statusCode: 200,
-//             headers: {
-//               'Access-Control-Allow-Origin': '*',
-//               'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-//               'Access-Control-Allow-Methods': 'OPTIONS,GET'
-//             },
-//             body: JSON.stringify(searchResults),
-//           };
-//           return response;
-//       }
-//   } catch (error) {
-//     console.error('Error processing SQS event:', error);
-//   }
-// }
-
 import { APIGatewayProxyResult, APIGatewayProxyEvent, SQSEvent } from 'aws-lambda';
 import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 
@@ -78,9 +35,9 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
     const { Body: messageBody, ReceiptHandle } = message;
 
     // // // Process the message payload
-    // const messageToJson = JSON.parse(messageBody || '{}');
-    // const messagePayload = messageToJson.data;
-    // const searchResults = messagePayload.Items || '{}';
+    const messageToJson = JSON.parse(messageBody || '{}');
+    const messagePayload = messageToJson.data;
+    const searchResults = messagePayload.Items || '{}';
 
     // // // Delete the processed message from the queue
     // const deleteMessageCommand = new DeleteMessageCommand({
@@ -91,13 +48,13 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
 
     // Return the search results as an HTTP response
     const response: APIGatewayProxyResult = {
-      'statusCode': 200,
-      'headers': {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Methods': '*',
+      statusCode: 200,
+      headers: {
+        // 'Content-Type': 'application/json',
+        // 'Access-Control-Allow-Methods': '*',
         'Access-Control-Allow-Origin': '*',
       },
-      body: JSON.stringify("bodyParsed"),
+      body: searchResults,
     };
 
     return response;
