@@ -32,7 +32,9 @@ const dynamo = {
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = JSON.parse(event.body);
-        const data = Object.assign(Object.assign({}, body), { personId: (0, uuid_1.v4)() });
+        const data = Object.assign(Object.assign({}, body), { 
+            // to make search feature more usable, add upperCase attribute
+            addressUpperCase: body.address.toUpperCase(), lastNameUpperCase: body.lastName.toUpperCase(), firstNameUpperCase: body.firstName.toUpperCase(), personId: (0, uuid_1.v4)() });
         // call write function from Library
         yield dynamo.write(data, "PeopleTest");
         const response = {

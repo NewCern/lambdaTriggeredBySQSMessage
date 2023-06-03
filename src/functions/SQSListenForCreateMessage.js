@@ -47,17 +47,19 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         }
         for (const message of event.Records) {
             const { body } = message;
+            // converts message to javascript object.
+            // however, at this point, data payload is still in xml format at this point
             const messageToJson = JSON.parse(body);
             // access data key in s3 bucket to get xml file
             const messagePayload = messageToJson.data;
-            const bufferString = Buffer.from(messagePayload).toString('utf8');
-            // get xml file and parse to javascript
-            const persons = yield parseXML(bufferString);
+            // const bufferString= Buffer.from(messagePayload).toString('utf8');
+            // parse xml file to javascript object
+            const persons = yield parseXML(messagePayload);
             // iterate through persons and add each object to DynamoDB
             for (let person of persons) {
-                // add an id number
+                // create an id number
                 // and spread person object
-                const data = Object.assign(Object.assign({}, person), { personId: (0, uuid_1.v4)() });
+                const data = Object.assign(Object.assign({}, person), { addressUpperCase: person.address.toUpperCase(), lastNameUpperCase: person.lastName.toUpperCase(), firstNameUpperCase: person.firstName.toUpperCase(), personId: (0, uuid_1.v4)() });
                 // post to the database
                 yield insertToDynamo(data, TABLE_NAME);
                 console.log("Here is each person: ", person);
@@ -86,6 +88,7 @@ function parseXML(xmlPayload) {
             };
             const parser = new xml2js.Parser(options);
             const parsedData = yield parser.parseStringPromise(xmlPayload);
+            // create an array of datatype "Person"
             const persons = parsedData.records.record.map((record) => ({
                 firstName: record.firstName,
                 lastName: record.lastName,

@@ -11,8 +11,11 @@ const TABLE_NAME = "PeopleTest";
 
 interface Person {
   firstName: string;
+  // firstNameLowerCase: string;
   lastName: string;
+  // lastNameLowerCase: string;
   address: string;
+  // addressLowerCase: string;
 }
 
 export const handler:SQSHandler = async (event: SQSEvent): Promise<any> => {
@@ -24,20 +27,25 @@ export const handler:SQSHandler = async (event: SQSEvent): Promise<any> => {
 
       for (const message of event.Records) {
         const { body } = message;
+        // converts message to javascript object.
+        // however, at this point, data payload is still in xml format at this point
         const messageToJson = JSON.parse(body);
         // access data key in s3 bucket to get xml file
         const messagePayload = messageToJson.data;
-        const bufferString= Buffer.from(messagePayload).toString('utf8');
+        // const bufferString= Buffer.from(messagePayload).toString('utf8');
 
-        // get xml file and parse to javascript
-        const persons = await parseXML(bufferString);
+        // parse xml file to javascript object
+        const persons = await parseXML(messagePayload);
 
         // iterate through persons and add each object to DynamoDB
         for(let person of persons){
-          // add an id number
+          // create an id number
           // and spread person object
           const data = {
             ...person,
+            addressUpperCase: person.address.toUpperCase(),
+            lastNameUpperCase: person.lastName.toUpperCase(),
+            firstNameUpperCase: person.firstName.toUpperCase(),
             personId: uuid(),
           }
           // post to the database
@@ -67,6 +75,7 @@ async function parseXML(xmlPayload: string): Promise<any> {
 
       const parser = new xml2js.Parser(options);
       const parsedData = await parser.parseStringPromise(xmlPayload);
+      // create an array of datatype "Person"
       const persons: Person[] = parsedData.records.record.map((record: any) => ({
         firstName: record.firstName,
         lastName: record.lastName,

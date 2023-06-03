@@ -14,7 +14,7 @@ export const handler: S3Handler = async (event): Promise<any> => {
     // Process the S3 create event
     const records: S3EventRecord[] = event.Records;
     for (const record of records) {
-      if (record.eventName === 'ObjectCreated:Put') {
+      if (record.eventName === 'ObjectCreated:Put') {            
         const bucketName: string = record.s3.bucket.name;
         const objectKey: string = record.s3.object.key;
 
@@ -25,15 +25,16 @@ export const handler: S3Handler = async (event): Promise<any> => {
           Key: objectKey,
         });
       
-        // send get command to S3 bucket
+        // send get message command to S3 bucket
         const getData = await s3.send(getObjectParams);
+        // access the actual data within the S3 bucket
         // once data is recieved, convert to a string
         const fileData = await getData.Body?.transformToString();
         console.log("Here is the File data: ", fileData);
         
         // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-        // configure SQS message equiped with xml data
+        // configure SQS message equiped with xml data within "data" key
         const message = {
           event: 'objectCreated:Put',
           bucket: bucketName,

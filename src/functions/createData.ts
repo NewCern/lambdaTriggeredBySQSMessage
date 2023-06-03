@@ -26,6 +26,10 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
         const body = JSON.parse(event.body);
         const data = {
             ...body,
+            // to make search feature more usable, add upperCase attribute
+            addressUpperCase: body.address.toUpperCase(),
+            lastNameUpperCase: body.lastName.toUpperCase(),
+            firstNameUpperCase: body.firstName.toUpperCase(),
             personId: uuid()
         };
         // call write function from Library

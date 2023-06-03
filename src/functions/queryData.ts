@@ -19,14 +19,14 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
 
     const params = {
       TableName: TABLE_NAME,
-      FilterExpression: 'contains(firstName, :keyword) OR contains(lastName, :keyword) OR contains(address, :keyword)',
+      FilterExpression: 'contains(firstNameUpperCase, :keyword) OR contains(lastNameUpperCase, :keyword) OR contains(addressUpperCase, :keyword)',
       ExpressionAttributeValues: {
-        ':keyword': keyword
+        ':keyword': keyword.toUpperCase()
       }
     };
 
-      const data = await dynamoDB.scan(params).promise();
-      const users = data.Items as User[];
+    const data = await dynamoDB.scan(params).promise();
+    const users = data.Items as User[];
 
     const response: APIGatewayProxyResult = {
       statusCode: 200,

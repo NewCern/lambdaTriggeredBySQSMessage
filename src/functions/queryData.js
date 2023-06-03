@@ -20,9 +20,9 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         const keyword = body.search;
         const params = {
             TableName: TABLE_NAME,
-            FilterExpression: 'contains(firstName, :keyword) OR contains(lastName, :keyword) OR contains(address, :keyword)',
+            FilterExpression: 'contains(firstNameUpperCase, :keyword) OR contains(lastNameUpperCase, :keyword) OR contains(addressUpperCase, :keyword)',
             ExpressionAttributeValues: {
-                ':keyword': keyword
+                ':keyword': keyword.toUpperCase()
             }
         };
         const data = yield dynamoDB.scan(params).promise();

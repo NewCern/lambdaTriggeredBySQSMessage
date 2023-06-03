@@ -30,13 +30,14 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
                     Bucket: bucketName,
                     Key: objectKey,
                 });
-                // send get command to S3 bucket
+                // send get message command to S3 bucket
                 const getData = yield s3.send(getObjectParams);
+                // access the actual data within the S3 bucket
                 // once data is recieved, convert to a string
                 const fileData = yield ((_a = getData.Body) === null || _a === void 0 ? void 0 : _a.transformToString());
                 console.log("Here is the File data: ", fileData);
                 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-                // configure SQS message equiped with xml data
+                // configure SQS message equiped with xml data within "data" key
                 const message = {
                     event: 'objectCreated:Put',
                     bucket: bucketName,
