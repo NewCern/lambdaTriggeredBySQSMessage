@@ -2,12 +2,18 @@ import { DynamoDB } from 'aws-sdk';
 import { APIGatewayProxyResult } from "aws-lambda";
 
 const dynamoDB = new DynamoDB.DocumentClient();
-const TABLE_NAME = "PeopleTest";
+const TABLE_NAME = "books";
 
-interface User {
-  firstName: string;
-  lastName: string;
-  address: string;
+interface Book {
+  by: string,
+  title: string,
+  publicationDate: string,
+  format: string,
+  category: string,
+  trimSize: string,
+  isbn: string,
+  price: string,
+  imageUrl: string
 }
 
 export const handler = async (): Promise<any> => { 
@@ -18,7 +24,7 @@ export const handler = async (): Promise<any> => {
   try {
     // GET request
     const data = await dynamoDB.scan(params).promise();
-    const users = data.Items as User[];
+    const books = data.Items as Book[];
     const response: APIGatewayProxyResult = {
         statusCode: 200,
         headers: {
@@ -26,13 +32,13 @@ export const handler = async (): Promise<any> => {
           'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
           'Access-Control-Allow-Methods': 'OPTIONS,GET'
         },
-        body: JSON.stringify(users),
+        body: JSON.stringify(books),
       };
       return response;
   } catch (error) {
     return { 
         statusCode: 500, 
-        body: JSON.stringify(`Error getting users from DynamoDB: ${error}`) 
+        body: JSON.stringify(`Error getting books from DynamoDB: ${error}`) 
     };
   }
 };

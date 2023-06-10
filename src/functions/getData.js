@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const aws_sdk_1 = require("aws-sdk");
 const dynamoDB = new aws_sdk_1.DynamoDB.DocumentClient();
-const TABLE_NAME = "PeopleTest";
+const TABLE_NAME = "books";
 const handler = () => __awaiter(void 0, void 0, void 0, function* () {
     const params = {
         TableName: TABLE_NAME,
@@ -20,7 +20,7 @@ const handler = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         // GET request
         const data = yield dynamoDB.scan(params).promise();
-        const users = data.Items;
+        const books = data.Items;
         const response = {
             statusCode: 200,
             headers: {
@@ -28,14 +28,14 @@ const handler = () => __awaiter(void 0, void 0, void 0, function* () {
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'OPTIONS,GET'
             },
-            body: JSON.stringify(users),
+            body: JSON.stringify(books),
         };
         return response;
     }
     catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify(`Error getting users from DynamoDB: ${error}`)
+            body: JSON.stringify(`Error getting books from DynamoDB: ${error}`)
         };
     }
 });

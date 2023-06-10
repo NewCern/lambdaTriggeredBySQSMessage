@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.handler = void 0;
 const client_sqs_1 = require("@aws-sdk/client-sqs");
 const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
-const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/updated-data-object-queue";
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/bookstore-updated-data-object-queue";
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const body = JSON.parse(event.body);

@@ -53,7 +53,7 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             Body: buffer,
             Key: key,
             ContentType: body.mime,
-            Bucket: "files-will-be-processed-to-sqs-here",
+            Bucket: "bookstore-files-will-be-processed-to-sqs-here",
         })
             .promise();
         const response = {

@@ -14,7 +14,7 @@ const aws_sdk_1 = require("aws-sdk");
 const client_sqs_1 = require("@aws-sdk/client-sqs");
 // this is the queue that the results message will be sent to.
 const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
-const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/search-results-objects-queue";
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/bookstore-search-results-objects-queue";
 const dynamoDB = new aws_sdk_1.DynamoDB.DocumentClient();
 const TABLE_NAME = "PeopleTest";
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {

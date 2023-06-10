@@ -2,7 +2,7 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { APIGatewayProxyResult } from "aws-lambda";
 
 const sqs = new SQSClient({ region: "us-east-1" });
-const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/query-data-object-queue";
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/bookstore-query-data-object-queue";
 
 export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayProxyResult> => {
   try {

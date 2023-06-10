@@ -6,7 +6,7 @@ import AWS from 'aws-sdk';
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const sqs = new SQSClient({ region: "us-east-1" });
-const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/xml-file-added-to-queue";
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/bookstore-xml-file-added-to-queue";
 const s3 = new S3Client({})
 
 export const handler: S3Handler = async (event): Promise<any> => {

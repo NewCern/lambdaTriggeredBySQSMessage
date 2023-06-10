@@ -38,7 +38,7 @@ const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const uuid_1 = require("uuid");
 const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
-const TABLE_NAME = "PeopleTest";
+const TABLE_NAME = "books";
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         if (!event.Records || event.Records.length === 0) {
@@ -52,17 +52,20 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
             const messageToJson = JSON.parse(body);
             // access data key in s3 bucket to get xml file
             const messagePayload = messageToJson.data;
-            // const bufferString= Buffer.from(messagePayload).toString('utf8');
+            console.log("This is the message Payload: ", messagePayload);
             // parse xml file to javascript object
-            const persons = yield parseXML(messagePayload);
+            const books = yield parseXML(messagePayload);
             // iterate through persons and add each object to DynamoDB
-            for (let person of persons) {
+            for (let book of books) {
                 // create an id number
                 // and spread person object
-                const data = Object.assign(Object.assign({}, person), { addressUpperCase: person.address.toUpperCase(), lastNameUpperCase: person.lastName.toUpperCase(), firstNameUpperCase: person.firstName.toUpperCase(), personId: (0, uuid_1.v4)() });
+                const data = Object.assign(Object.assign({}, book), { 
+                    // create uppercase attributes
+                    byUpperCase: book.by.toUpperCase(), titleUpperCase: book.title.toUpperCase(), publicationDateUpperCase: book.publicationDate.toUpperCase(), formatUpperCase: book.format.toUpperCase(), trimSizeUpperCase: book.trimSize.toUpperCase(), categoryUpperCase: book.category.toUpperCase(), isbnUpperCase: book.isbn.toUpperCase(), bookId: (0, uuid_1.v4)() });
                 // post to the database
                 yield insertToDynamo(data, TABLE_NAME);
-                console.log("Here is each person: ", person);
+                console.log("Here is each book: ", book);
+                console.log("Book with upperCase Integrated: ", data);
             }
         }
     }
@@ -88,13 +91,19 @@ function parseXML(xmlPayload) {
             };
             const parser = new xml2js.Parser(options);
             const parsedData = yield parser.parseStringPromise(xmlPayload);
-            // create an array of datatype "Person"
-            const persons = parsedData.records.record.map((record) => ({
-                firstName: record.firstName,
-                lastName: record.lastName,
-                address: record.address,
+            // create an array of datatype "Book"
+            const books = parsedData.books.book.map((book) => ({
+                by: book.by,
+                title: book.title,
+                publicationDate: book.publicationDate,
+                format: book.format,
+                category: book.category,
+                trimSize: book.trimSize,
+                isbn: book.isbn,
+                price: book.price,
+                imageUrl: book.imageUrl
             }));
-            return persons;
+            return books;
         }
         catch (error) {
             console.error('Error parsing XML:', error);
@@ -102,16 +111,16 @@ function parseXML(xmlPayload) {
         }
     });
 }
-// INSERT PERSON
-function insertToDynamo(person, tableName) {
+// INSERT BOOK
+function insertToDynamo(book, tableName) {
     return __awaiter(this, void 0, void 0, function* () {
         const params = {
             TableName: tableName,
-            Item: person,
+            Item: book,
         };
         const command = new lib_dynamodb_1.PutCommand(params);
         yield dynamoClient.send(command);
-        return person;
+        return book;
     });
 }
 // DELETE

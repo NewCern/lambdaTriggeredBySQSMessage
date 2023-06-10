@@ -21,7 +21,7 @@ export const handler = async (event: any): Promise<any> => {
                 Body: buffer,
                 Key: key,
                 ContentType: body.mime,
-                Bucket: "files-will-be-processed-to-sqs-here"!,
+                Bucket: "bookstore-files-will-be-processed-to-sqs-here"!,
             })
             .promise();
         const response = {

@@ -13,7 +13,7 @@ exports.handler = void 0;
 const client_sqs_1 = require("@aws-sdk/client-sqs");
 const client_s3_1 = require("@aws-sdk/client-s3");
 const sqs = new client_sqs_1.SQSClient({ region: "us-east-1" });
-const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/xml-file-added-to-queue";
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/bookstore-xml-file-added-to-queue";
 const s3 = new client_s3_1.S3Client({});
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;

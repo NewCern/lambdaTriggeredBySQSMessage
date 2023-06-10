@@ -1,4 +1,4 @@
-service: SplitXMLaddToDynamodb
+service: book-store-serverless
 provider:
   name: aws
   runtime: nodejs16.x
@@ -11,42 +11,32 @@ provider:
         - s3:*
         - sqs:*
       Resource: '*'
-  # cors: # Add this section for global CORS configuration
-  #   origin: '*' 
-  #   headers: 
-  #     - Content-Type
-  #     - X-Amz-Date
-  #     - Authorization
-  #     - X-Api-Key
-  #     - X-Amz-Security-Token
-  #     - X-Amz-User-Agent
-  #   allowCredentials: false
 
 custom:
-  xmlFileBucket: files-will-be-processed-to-sqs-here
+  xmlFileBucket: bookstore-files-will-be-processed-to-sqs-here
 
 resources:
   Resources:
     queueForXMLfile:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: xml-file-added-to-queue
+        QueueName: bookstore-xml-file-added-to-queue
     queueForUpdateFile:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: updated-data-object-queue
+        QueueName: bookstore-updated-data-object-queue
     queueForDeleteFile:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: delete-data-object-queue
+        QueueName: bookstore-delete-data-object-queue
     queueForQueryFile:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: query-data-object-queue
+        QueueName: bookstore-query-data-object-queue
     queueForResults:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: search-results-objects-queue
+        QueueName: bookstore-search-results-objects-queue
 
 functions:
   uploadFile:
@@ -192,14 +182,14 @@ functions:
           method: POST
           cors:
             origin: '*' 
-            headers: 
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-            allowCredentials: false
+            # headers: 
+            #   - Content-Type
+            #   - X-Amz-Date
+            #   - Authorization
+            #   - X-Api-Key
+            #   - X-Amz-Security-Token
+            #   - X-Amz-User-Agent
+            # allowCredentials: false
 
   S3ListenForCreate:
     handler: src/functions/S3ListenForCreate.handler
@@ -212,13 +202,13 @@ functions:
     handler: src/functions/SQSListenForCreateMessage.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:233784350905:xml-file-added-to-queue
+          arn: arn:aws:sqs:us-east-1:233784350905:bookstore-xml-file-added-to-queue
 
   SQSListenForQueryMessage:
     handler: src/functions/SQSListenForQueryMessage.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:233784350905:query-data-object-queue
+          arn: arn:aws:sqs:us-east-1:233784350905:bookstore-query-data-object-queue
 
   getSearchResultsMessage:
     handler: src/functions/getSearchResultsMessage.handler
@@ -236,20 +226,18 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
-      # - sqs:
-      #     arn: arn:aws:sqs:us-east-1:233784350905:search-results-objects-queue
 
   SQSListenForUpdateMessage:
     handler: src/functions/SQSListenForUpdateMessage.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:233784350905:updated-data-object-queue
+          arn: arn:aws:sqs:us-east-1:233784350905:bookstore-updated-data-object-queue
 
   SQSListenForDeleteMessage:
     handler: src/functions/SQSListenForDeleteMessage.handler
     events:
       - sqs:
-          arn: arn:aws:sqs:us-east-1:233784350905:delete-data-object-queue
+          arn: arn:aws:sqs:us-east-1:233784350905:bookstore-delete-data-object-queue
 
 
 

@@ -7,15 +7,19 @@ import { PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
 import { v4 as uuid } from "uuid";
 
 const dynamoClient = new DynamoDBClient({});
-const TABLE_NAME = "PeopleTest";
+const TABLE_NAME = "books";
 
-interface Person {
-  firstName: string;
-  // firstNameLowerCase: string;
-  lastName: string;
-  // lastNameLowerCase: string;
-  address: string;
-  // addressLowerCase: string;
+interface Book {
+  by: string,
+  title: string,
+  publicationDate: string,
+  format: string,
+  category: string,
+  trimSize: string,
+  isbn: string,
+  price: string,
+  imageUrl: string
+  
 }
 
 export const handler:SQSHandler = async (event: SQSEvent): Promise<any> => {
@@ -32,25 +36,31 @@ export const handler:SQSHandler = async (event: SQSEvent): Promise<any> => {
         const messageToJson = JSON.parse(body);
         // access data key in s3 bucket to get xml file
         const messagePayload = messageToJson.data;
-        // const bufferString= Buffer.from(messagePayload).toString('utf8');
+        console.log("This is the message Payload: ", messagePayload);
 
         // parse xml file to javascript object
-        const persons = await parseXML(messagePayload);
+        const books = await parseXML(messagePayload);
 
         // iterate through persons and add each object to DynamoDB
-        for(let person of persons){
+        for(let book of books){
           // create an id number
           // and spread person object
           const data = {
-            ...person,
-            addressUpperCase: person.address.toUpperCase(),
-            lastNameUpperCase: person.lastName.toUpperCase(),
-            firstNameUpperCase: person.firstName.toUpperCase(),
-            personId: uuid(),
+            ...book,
+            // create uppercase attributes
+            byUpperCase: book.by.toUpperCase(),
+            titleUpperCase: book.title.toUpperCase(),
+            publicationDateUpperCase: book.publicationDate.toUpperCase(),
+            formatUpperCase: book.format.toUpperCase(),
+            trimSizeUpperCase: book.trimSize.toUpperCase(),
+            categoryUpperCase: book.category.toUpperCase(),
+            isbnUpperCase: book.isbn.toUpperCase(),
+            bookId: uuid(),
           }
           // post to the database
           await insertToDynamo(data, TABLE_NAME);
-          console.log("Here is each person: ", person);
+          console.log("Here is each book: ", book);
+          console.log("Book with upperCase Integrated: ", data);
         }
       }
   } catch (error) {
@@ -75,27 +85,33 @@ async function parseXML(xmlPayload: string): Promise<any> {
 
       const parser = new xml2js.Parser(options);
       const parsedData = await parser.parseStringPromise(xmlPayload);
-      // create an array of datatype "Person"
-      const persons: Person[] = parsedData.records.record.map((record: any) => ({
-        firstName: record.firstName,
-        lastName: record.lastName,
-        address: record.address,
+      // create an array of datatype "Book"
+      const books: Book[] = parsedData.books.book.map((book: any) => ({
+        by: book.by,
+        title: book.title,
+        publicationDate: book.publicationDate,
+        format: book.format,
+        category: book.category,
+        trimSize: book.trimSize,
+        isbn: book.isbn,
+        price: book.price,
+        imageUrl: book.imageUrl
       }));
-      return persons;
+      return books;
   } catch (error) {
       console.error('Error parsing XML:', error);
       return;
   }
 }
-// INSERT PERSON
-async function insertToDynamo (person: Record<string, any>, tableName: string): Promise<any> {
+// INSERT BOOK
+async function insertToDynamo (book: Record<string, any>, tableName: string): Promise<any> {
   const params: PutCommandInput = {
     TableName: tableName,
-    Item: person,
+    Item: book,
   };
   const command = new PutCommand(params);
   await dynamoClient.send(command);
-  return person;
+  return book;
 }
 
 // DELETE

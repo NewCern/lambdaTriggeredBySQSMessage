@@ -5,7 +5,7 @@ import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 // this is the queue that the results message will be sent to.
 const sqs = new SQSClient({ region: "us-east-1" });
-const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/search-results-objects-queue";
+const queueUrl = "https://sqs.us-east-1.amazonaws.com/233784350905/bookstore-search-results-objects-queue";
 
 const dynamoDB = new DynamoDB.DocumentClient();
 const TABLE_NAME = "PeopleTest";
