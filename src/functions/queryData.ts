@@ -13,7 +13,6 @@ interface Book {
   trimSize: string,
   isbn: string,
   price: string,
-  // details: string,
   imageUrl: string
 }
 
