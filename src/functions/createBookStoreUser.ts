@@ -2,8 +2,27 @@ import { APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuid } from "uuid";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
+import { DynamoDB } from 'aws-sdk';
 
 const dynamoClient = new DynamoDBClient({});
+const dynamoDB = new DynamoDB.DocumentClient();
+
+const TABLE_NAME = 'Customers';
+
+interface Customer {
+        emailAddress: string,
+        password: string,
+        firstName: string,
+        lastName: string,
+        areaCode: string,
+        phoneNumber: string,
+        address: string,
+        apt: string,
+        city: string,
+        state: string,
+        zip: string,
+    }
+
 
 // Create an object to export with key value pa
 // some of these key value pairs will be functions
@@ -24,7 +43,8 @@ const dynamo = {
 export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayProxyResult> => {
     try {
         const body = JSON.parse(event.body);
-        const data = {
+        const keyword = body.emailAddress;
+        const newUser = {
             ...body,
             // to make search feature more usable, add upperCase attribute
             emailAddressUpperCase: body.emailAddress.toUpperCase(),
@@ -37,9 +57,34 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
             customerId: uuid()
         };
         // create logic to check for duplicate email address before POST
+        const params = {
+            TableName: TABLE_NAME,
+            FilterExpression: 'contains(emailAddressUpperCase, :keyword)',
+            ExpressionAttributeValues: {
+                ':keyword': keyword.toUpperCase()
+            }
+        };
 
-        // call write function from Library
-        await dynamo.write(data, "Customers");
+        // search database of existance of email
+        const data = await dynamoDB.scan(params).promise();
+        const books = data.Items as Customer[];
+
+        // chech if any emails are returned
+        if(books.length !== 0) {
+            const response: APIGatewayProxyResult = {
+                statusCode: 200,
+                headers: {
+                  'Access-Control-Allow-Origin': '*',
+                  'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                  'Access-Control-Allow-Methods': 'OPTIONS,POST'
+                },
+                body: JSON.stringify({ message: `Email Already Exists for ${keyword}`, statusCode: 409 })
+              };
+              return response;
+        }
+
+        // else call write function from Library
+        await dynamo.write(newUser, "Customers");
         const response: APIGatewayProxyResult = {
             statusCode: 200,
             headers: {
@@ -47,11 +92,11 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
               'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
               'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
-            body: JSON.stringify({ message: 'Data has been created' })
+            body: JSON.stringify({ message: 'User Succesfully created', statusCode: 200, books })
           };
           return response;
     } catch(error){
-        console.error('Unable to add item. Error JSON:', JSON.stringify(error, null, 2));
+        console.error('Unable to add customer. Error JSON:', JSON.stringify(error, null, 2));
         const response: APIGatewayProxyResult = {
           statusCode: 500,
           headers: {
@@ -59,7 +104,7 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
             'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
             'Access-Control-Allow-Methods': 'OPTIONS,POST'
           },
-          body: JSON.stringify({ message: 'Unable to add item' })
+          body: JSON.stringify( error )
         };
         return response;
     }

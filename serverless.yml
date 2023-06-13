@@ -90,6 +90,23 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: false
 
+  createBookStoreUser:
+    handler: src/functions/createBookStoreUser.handler
+    events:
+      - http:
+          path: /create-bookstore-user
+          method: post
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
   deleteData:
     handler: src/functions/deleteData.handler
     events:
@@ -106,6 +123,7 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
             allowCredentials: false
+
   updateData:
     handler: src/functions/updateData.handler
     events:
