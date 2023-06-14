@@ -34,6 +34,8 @@ const dynamo = {
 };
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        // const bcryptTest = bcrypt.hashSync('ThisIsPlainTest', 10);
+        // console.log("This is the incrypted word: ", bcryptTest);
         const body = JSON.parse(event.body);
         const keyword = body.emailAddress;
         const newUser = Object.assign(Object.assign({}, body), { 

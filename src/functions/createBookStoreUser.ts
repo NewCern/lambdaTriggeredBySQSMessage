@@ -3,9 +3,11 @@ import { v4 as uuid } from "uuid";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from 'aws-sdk';
+import bcrypt from 'bcrypt';
 
 const dynamoClient = new DynamoDBClient({});
 const dynamoDB = new DynamoDB.DocumentClient();
+
 
 const TABLE_NAME = 'Customers';
 
@@ -42,6 +44,8 @@ const dynamo = {
 
 export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayProxyResult> => {
     try {
+        // const bcryptTest = bcrypt.hashSync('ThisIsPlainTest', 10);
+        // console.log("This is the incrypted word: ", bcryptTest);
         const body = JSON.parse(event.body);
         const keyword = body.emailAddress;
         const newUser = {
