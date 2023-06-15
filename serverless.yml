@@ -15,6 +15,9 @@ provider:
 custom:
   xmlFileBucket: bookstore-files-will-be-processed-to-sqs-here
 
+# package:
+#   individually: true
+
 resources:
   Resources:
     queueForXMLfile:
@@ -95,6 +98,23 @@ functions:
     events:
       - http:
           path: /create-bookstore-user
+          method: post
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+  login:
+    handler: src/functions/login.handler
+    events:
+      - http:
+          path: /bookstore-user-login
           method: post
           cors:
             origin: '*' 

@@ -71,10 +71,10 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
 
         // search database of existance of email
         const data = await dynamoDB.scan(params).promise();
-        const books = data.Items as Customer[];
+        const customers = data.Items as Customer[];
 
         // chech if any emails are returned
-        if(books.length !== 0) {
+        if(customers.length !== 0) {
             const response: APIGatewayProxyResult = {
                 statusCode: 200,
                 headers: {
@@ -96,7 +96,7 @@ export const handler = async (event: APIGatewayProxyResult): Promise<APIGatewayP
               'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
               'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
-            body: JSON.stringify({ message: 'User Succesfully created', statusCode: 200, books })
+            body: JSON.stringify({ message: 'User Succesfully created', statusCode: 200, customers })
           };
           return response;
     } catch(error){
