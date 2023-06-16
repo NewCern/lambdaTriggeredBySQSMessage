@@ -34,8 +34,6 @@ const dynamo = {
 };
 const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // const bcryptTest = bcrypt.hashSync('ThisIsPlainTest', 10);
-        // console.log("This is the incrypted word: ", bcryptTest);
         const body = JSON.parse(event.body);
         const keyword = body.emailAddress;
         const newUser = Object.assign(Object.assign({}, body), { 
@@ -54,16 +52,19 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
         const customers = data.Items;
         // chech if any emails are returned
         if (customers.length !== 0) {
-            const response = {
-                statusCode: 200,
-                headers: {
-                    'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-                    'Access-Control-Allow-Methods': 'OPTIONS,POST'
-                },
-                body: JSON.stringify({ message: `Email Already Exists for ${keyword}`, statusCode: 409 })
-            };
-            return response;
+            const matchingEmail = customers.find(customer => customer.emailAddress.toUpperCase() === keyword.toUpperCase());
+            if (matchingEmail) {
+                const response = {
+                    statusCode: 200,
+                    headers: {
+                        'Access-Control-Allow-Origin': '*',
+                        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                        'Access-Control-Allow-Methods': 'OPTIONS,POST'
+                    },
+                    body: JSON.stringify({ message: `Email Already Exists for ${keyword}`, statusCode: 409 })
+                };
+                return response;
+            }
         }
         // else call write function from Library
         yield dynamo.write(newUser, "Customers");
