@@ -229,6 +229,23 @@ functions:
             #   - X-Amz-User-Agent
             # allowCredentials: false
 
+  updateBookstoreCustomer:
+    handler: src/functions/updateBookstoreCustomer.handler
+    events:
+      - http:
+          path: /update-customer
+          method: POST
+          cors:
+            origin: '*' 
+            # headers: 
+            #   - Content-Type
+            #   - X-Amz-Date
+            #   - Authorization
+            #   - X-Api-Key
+            #   - X-Amz-Security-Token
+            #   - X-Amz-User-Agent
+            # allowCredentials: false
+
   S3ListenForCreate:
     handler: src/functions/S3ListenForCreate.handler
     events:
