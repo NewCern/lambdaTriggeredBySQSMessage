@@ -25,6 +25,7 @@ export const handler = async (): Promise<any> => {
     // GET request
     const data = await dynamoDB.scan(params).promise();
     const books = data.Items as Book[];
+    
     const response: APIGatewayProxyResult = {
         statusCode: 200,
         headers: {

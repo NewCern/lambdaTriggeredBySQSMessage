@@ -28,6 +28,7 @@ export const handler = async (event: any): Promise<any> => {
         const personId = event.pathParameters.id;
         // call delete function 
         await dynamo.delete("PeopleTest", personId);
+        
         const response: APIGatewayProxyResult = {
             statusCode: 200,
             headers: {
