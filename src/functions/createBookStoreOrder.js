@@ -27,6 +27,7 @@ const lib_dynamodb_2 = require("@aws-sdk/lib-dynamodb");
 const aws_sdk_1 = require("aws-sdk");
 const dynamoClient = new client_dynamodb_1.DynamoDBClient({});
 const dynamoDB = new aws_sdk_1.DynamoDB.DocumentClient();
+const timeStamp = new Date().toISOString();
 // Create an object to export with key value pairs
 // some of these key value pairs will be functions
 const dynamo = {
@@ -48,9 +49,10 @@ const dynamo = {
             Key: {
                 orderId: orderId,
             },
-            UpdateExpression: "SET #isLoggedIn = :isLoggedInValue, #emailAddress = :emailAddressValue, #emailAddressUpperCase = :emailAddressUpperCaseValue, #shippingDetails = :shippingDetailsValue, #items = :itemsValue, #total = :totalValue, #openCart = :openCartValue, #fullfilled = :fullfilledValue, #paymentProcessed = :paymentProcessedValue",
+            UpdateExpression: "SET #isLoggedIn = :isLoggedInValue, #customerId = :customerIdValue, #emailAddress = :emailAddressValue, #emailAddressUpperCase = :emailAddressUpperCaseValue, #shippingDetails = :shippingDetailsValue, #items = :itemsValue, #total = :totalValue, #openCart = :openCartValue, #fullfilled = :fullfilledValue, #paymentProcessed = :paymentProcessedValue",
             ExpressionAttributeNames: {
                 "#isLoggedIn": "isLoggedIn",
+                "#customerId": "customerId",
                 "#emailAddress": "emailAddress",
                 "#emailAddressUpperCase": "emailAddressUpperCase",
                 "#shippingDetails": "shippingDetails",
@@ -59,9 +61,11 @@ const dynamo = {
                 "#openCart": "openCart",
                 "#fullfilled": "fullfilled",
                 "#paymentProcessed": "paymentProcessed",
+                // "#timestamp": "timestamp",
             },
             ExpressionAttributeValues: {
                 ":isLoggedInValue": updateData.isLoggedIn,
+                ":customerIdValue": updateData.customerId,
                 ":emailAddressValue": updateData.emailAddress,
                 ":emailAddressUpperCaseValue": updateData.emailAddress.toUpperCase(),
                 ":shippingDetailsValue": updateData.shippingDetails,
@@ -70,6 +74,7 @@ const dynamo = {
                 ":openCartValue": updateData.openCart,
                 ":fullfilledValue": updateData.fullfilled,
                 ":paymentProcessedValue": updateData.paymentProcessed,
+                // ":timestampValue": timeStamp,
             },
         };
         const command = new lib_dynamodb_1.UpdateCommand(params);
@@ -81,7 +86,7 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const eventBody = JSON.parse(event.body);
         const orderId = eventBody.orderId;
-        const body = Object.assign(Object.assign({}, eventBody), { emailAddressUpperCase: eventBody.emailAddress !== "" ? eventBody.emailAddress.toUpperCase() : eventBody.emailAddress, shippingDetails: {
+        const body = Object.assign(Object.assign({}, eventBody), { timestamp: new Date().toISOString(), emailAddressUpperCase: eventBody.emailAddress !== "" ? eventBody.emailAddress.toUpperCase() : eventBody.emailAddress, shippingDetails: {
                 address: eventBody.shippingDetails.address !== "" ? eventBody.shippingDetails.address.toUpperCase() : eventBody.shippingDetails.address,
                 apt: eventBody.shippingDetails.apt !== "" ? eventBody.shippingDetails.apt.toUpperCase() : eventBody.shippingDetails.apt,
                 city: eventBody.shippingDetails.city !== "" ? eventBody.shippingDetails.city.toUpperCase() : eventBody.shippingDetails.city,
@@ -129,7 +134,10 @@ const handler = (event) => __awaiter(void 0, void 0, void 0, function* () {
                 'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST'
             },
-            body: JSON.stringify({ message: 'Order has been created or updated' })
+            body: JSON.stringify({
+                message: 'Order updated',
+                statusCode: 200,
+            })
         };
         return response;
     }

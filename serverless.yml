@@ -127,6 +127,40 @@ functions:
               - X-Amz-User-Agent
             allowCredentials: false
 
+  getCustomerOrders:
+    handler: src/functions/getCustomerOrders.handler
+    events:
+      - http:
+          path: /get-bookstore-orders
+          method: post
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
+  getBookStoreCustomerCart:
+    handler: src/functions/getBookStoreCustomerCart.handler
+    events:
+      - http:
+          path: /get-bookstore-cart
+          method: post
+          cors:
+            origin: '*' 
+            headers: 
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: false
+
   login:
     handler: src/functions/login.handler
     events:
